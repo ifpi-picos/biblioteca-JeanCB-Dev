@@ -1,5 +1,21 @@
 import promptSync from "prompt-sync";
 const prompt = promptSync();
+import { MongoClient } from "mongodb";
+
+const uri =
+  "mongodb+srv://Biblioteca:y03chRGG5w3hKonf@cluster0.lz8g7.mongodb.net/?retryWrites=true&w=majority&appName=biblioteca"; // Substitua pela sua string de conexão
+const client = new MongoClient(uri);
+
+async function conectarMongoDB() {
+  try {
+    await client.connect();
+    console.log("Conectado ao MongoDB com sucesso.");
+  } catch (error) {
+    console.error("Erro ao conectar ao MongoDB:", error);
+  }
+}
+
+conectarMongoDB();
 
 interface Livro {
   titulo: string;
@@ -11,8 +27,10 @@ interface Livro {
 
 class Biblioteca {
   private livros: Livro[] = [];
+  private db = client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
+  private collection = this.db.collection("livros");
 
-  cadastrarLivro(titulo: string, autor: string, isbn: string) {
+  async cadastrarLivro(titulo: string, autor: string, isbn: string) {
     const livro: Livro = {
       titulo,
       autor,
@@ -21,15 +39,17 @@ class Biblioteca {
       historicoEmprestimos: [],
     };
     this.livros.push(livro);
+    await this.collection.insertOne(livro);
     console.log("Livro cadastrado com sucesso.");
   }
 
-  listarLivros() {
-    if (this.livros.length === 0) {
+  async listarLivros() {
+    const livros = await this.collection.find().toArray();
+    if (livros.length === 0) {
       console.log("Nenhum livro cadastrado.");
     } else {
       console.log("Livros cadastrados:");
-      this.livros.forEach((livro, index) => {
+      livros.forEach((livro, index) => {
         console.log(
           `${index + 1}. ${livro.titulo} - ${livro.autor} (ISBN: ${livro.isbn})`
         );
@@ -65,7 +85,7 @@ class Biblioteca {
       });
     }
   }
-// ...existing code...
+  // ...existing code...
 
   listarHistoricoEmprestimos() {
     this.livros.forEach((livro, index) => {
@@ -127,8 +147,8 @@ function menu() {
   console.log("6. Pegar Livro Emprestado");
   console.log("7. Devolver Livro");
   console.log("8. Sair\n");
-    const opcao = prompt("Escolha uma opção: ");
-    console.log("\n")
+  const opcao = prompt("Escolha uma opção: ");
+  console.log("\n");
 
   switch (opcao) {
     case "1":

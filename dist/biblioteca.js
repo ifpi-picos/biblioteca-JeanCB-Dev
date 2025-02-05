@@ -1,35 +1,67 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prompt_sync_1 = __importDefault(require("prompt-sync"));
 const prompt = (0, prompt_sync_1.default)();
+const mongodb_1 = require("mongodb");
+const uri = "mongodb+srv://Biblioteca:y03chRGG5w3hKonf@cluster0.lz8g7.mongodb.net/?retryWrites=true&w=majority&appName=biblioteca"; // Substitua pela sua string de conexão
+const client = new mongodb_1.MongoClient(uri);
+function conectarMongoDB() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield client.connect();
+            console.log("Conectado ao MongoDB com sucesso.");
+        }
+        catch (error) {
+            console.error("Erro ao conectar ao MongoDB:", error);
+        }
+    });
+}
+conectarMongoDB();
 class Biblioteca {
     constructor() {
         this.livros = [];
+        this.db = client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
+        this.collection = this.db.collection("livros");
     }
     cadastrarLivro(titulo, autor, isbn) {
-        const livro = {
-            titulo,
-            autor,
-            isbn,
-            emprestado: false,
-            historicoEmprestimos: [],
-        };
-        this.livros.push(livro);
-        console.log("Livro cadastrado com sucesso.");
+        return __awaiter(this, void 0, void 0, function* () {
+            const livro = {
+                titulo,
+                autor,
+                isbn,
+                emprestado: false,
+                historicoEmprestimos: [],
+            };
+            this.livros.push(livro);
+            yield this.collection.insertOne(livro);
+            console.log("Livro cadastrado com sucesso.");
+        });
     }
     listarLivros() {
-        if (this.livros.length === 0) {
-            console.log("Nenhum livro cadastrado.");
-        }
-        else {
-            console.log("Livros cadastrados:");
-            this.livros.forEach((livro, index) => {
-                console.log(`${index + 1}. ${livro.titulo} - ${livro.autor} (ISBN: ${livro.isbn})`);
-            });
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            const livros = yield this.collection.find().toArray();
+            if (livros.length === 0) {
+                console.log("Nenhum livro cadastrado.");
+            }
+            else {
+                console.log("Livros cadastrados:");
+                livros.forEach((livro, index) => {
+                    console.log(`${index + 1}. ${livro.titulo} - ${livro.autor} (ISBN: ${livro.isbn})`);
+                });
+            }
+        });
     }
     listarLivrosEmprestados() {
         const livrosEmprestados = this.livros.filter((livro) => livro.emprestado);
