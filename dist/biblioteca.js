@@ -12,31 +12,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const bancoDeDados_1 = require("./bancoDeDados");
 const prompt_sync_1 = __importDefault(require("prompt-sync"));
 const prompt = (0, prompt_sync_1.default)();
-const mongodb_1 = require("mongodb");
-const uri = "mongodb+srv://Biblioteca:y03chRGG5w3hKonf@cluster0.lz8g7.mongodb.net/?retryWrites=true&w=majority&appName=biblioteca"; // Substitua pela sua string de conexão
-const client = new mongodb_1.MongoClient(uri);
-function conectarMongoDB() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            yield client.connect();
-            console.log("Conectado ao MongoDB com sucesso.");
-        }
-        catch (error) {
-            console.error("Erro ao conectar ao MongoDB:", error);
-        }
-    });
-}
-conectarMongoDB();
 class Biblioteca {
     constructor() {
         this.livros = [];
-        this.db = client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
+        this.db = bancoDeDados_1.client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
         this.collection = this.db.collection("livros");
     }
     cadastrarLivro(titulo, autor, isbn) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield (0, bancoDeDados_1.conectarMongoDB)(); // Certifique-se de que a conexão está estabelecida
             const livro = {
                 titulo,
                 autor,
@@ -51,6 +38,7 @@ class Biblioteca {
     }
     listarLivros() {
         return __awaiter(this, void 0, void 0, function* () {
+            yield (0, bancoDeDados_1.conectarMongoDB)(); // Certifique-se de que a conexão está estabelecida
             const livros = yield this.collection.find().toArray();
             if (livros.length === 0) {
                 console.log("Nenhum livro cadastrado.");
@@ -75,114 +63,31 @@ class Biblioteca {
             });
         }
     }
-    // ...existing code...
-    listarLivrosDisponiveis() {
-        const livrosDisponiveis = this.livros.filter((livro) => !livro.emprestado);
-        if (livrosDisponiveis.length === 0) {
-            console.log("Nenhum livro disponível.");
-        }
-        else {
-            console.log("Livros disponíveis:");
-            livrosDisponiveis.forEach((livro, index) => {
-                console.log(`${index + 1}. ${livro.titulo} - ${livro.autor} (ISBN: ${livro.isbn})`);
-            });
-        }
-    }
-    // ...existing code...
-    listarHistoricoEmprestimos() {
-        this.livros.forEach((livro, index) => {
-            if (livro.historicoEmprestimos.length > 0) {
-                console.log(`Histórico de empréstimos do livro ${livro.titulo}:`);
-                livro.historicoEmprestimos.forEach((historico, histIndex) => {
-                    console.log(`  ${histIndex + 1}. ${historico}`);
-                });
-            }
-            else {
-                console.log("  Nenhum empréstimo registrado.");
-            }
-        });
-    }
-    pegarLivroEmprestado(isbn, usuario) {
-        const livro = this.livros.find((livro) => livro.isbn === isbn);
-        if (livro) {
-            if (!livro.emprestado) {
-                livro.emprestado = true;
-                livro.historicoEmprestimos.push(`Emprestado para ${usuario} em ${new Date().toLocaleString()}`);
-                console.log("Livro emprestado com sucesso.");
-            }
-            else {
-                console.log("Livro já está emprestado.");
-            }
-        }
-        else {
-            console.log("Livro não encontrado.\n");
-        }
-    }
-    devolverLivro(isbn, usuario) {
-        const livro = this.livros.find((livro) => livro.isbn === isbn);
-        if (livro) {
-            if (livro.emprestado) {
-                livro.emprestado = false;
-                livro.historicoEmprestimos.push(`Devolvido por ${usuario} em ${new Date().toLocaleString()}`);
-                console.log("Livro devolvido com sucesso.");
-            }
-            else {
-                console.log("Livro não está emprestado.");
-            }
-        }
-        else {
-            console.log("Livro não encontrado.\n");
-        }
-    }
 }
 const biblioteca = new Biblioteca();
-function menu() {
-    console.log("\nSistema de Biblioteca");
-    console.log("1. Cadastrar Livro");
-    console.log("2. Listar Livros");
-    console.log("3. Listar Livros Emprestados");
-    console.log("4. Listar Livros Disponíveis");
-    console.log("5. Listar Histórico de Empréstimos");
-    console.log("6. Pegar Livro Emprestado");
-    console.log("7. Devolver Livro");
-    console.log("8. Sair\n");
-    const opcao = prompt("Escolha uma opção: ");
-    console.log("\n");
-    switch (opcao) {
-        case "1":
-            const titulo = prompt("Título: ");
-            const autor = prompt("Autor: ");
-            const isbn = prompt("ISBN: ");
-            biblioteca.cadastrarLivro(titulo, autor, isbn);
-            break;
-        case "2":
-            biblioteca.listarLivros();
-            break;
-        case "3":
-            biblioteca.listarLivrosEmprestados();
-            break;
-        case "4":
-            biblioteca.listarLivrosDisponiveis();
-            break;
-        case "5":
-            biblioteca.listarHistoricoEmprestimos();
-            break;
-        case "6":
-            const isbnEmprestimo = prompt("ISBN do livro: ");
-            const usuarioEmprestimo = prompt("Nome do usuário: ");
-            biblioteca.pegarLivroEmprestado(isbnEmprestimo, usuarioEmprestimo);
-            break;
-        case "7":
-            const isbnDevolucao = prompt("ISBN do livro: ");
-            const usuarioDevolucao = prompt("Nome do usuário: ");
-            biblioteca.devolverLivro(isbnDevolucao, usuarioDevolucao);
-            break;
-        case "8":
-            console.log("Saindo...    \n");
-            return;
-        default:
-            console.log("Opção inválida.\n");
-    }
-    menu();
+function testarConexao() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, bancoDeDados_1.conectarMongoDB)(); // Certifique-se de que a conexão está estabelecida
+            const db = bancoDeDados_1.client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
+            const collection = db.collection("test");
+            // Inserir um documento de teste
+            const resultadoInsercao = yield collection.insertOne({ mensagem: "Teste de conexão" });
+            console.log("Documento inserido com ID:", resultadoInsercao.insertedId);
+            // Recuperar o documento de teste
+            const documento = yield collection.findOne({ _id: resultadoInsercao.insertedId });
+            console.log("Documento recuperado:", documento);
+            // Remover o documento de teste
+            yield collection.deleteOne({ _id: resultadoInsercao.insertedId });
+            console.log("Documento de teste removido.");
+        }
+        catch (error) {
+            console.error("Erro ao testar a conexão com o MongoDB:", error);
+        }
+        finally {
+            yield bancoDeDados_1.client.close();
+            console.log("Conexão com o MongoDB fechada.");
+        }
+    });
 }
-menu();
+testarConexao();
