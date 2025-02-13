@@ -65,24 +65,20 @@ class Biblioteca {
     }
 }
 const biblioteca = new Biblioteca();
-function testarConexao() {
+function testarOperacoes() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield (0, bancoDeDados_1.conectarMongoDB)(); // Certifique-se de que a conexão está estabelecida
-            const db = bancoDeDados_1.client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
-            const collection = db.collection("test");
-            // Inserir um documento de teste
-            const resultadoInsercao = yield collection.insertOne({ mensagem: "Teste de conexão" });
-            console.log("Documento inserido com ID:", resultadoInsercao.insertedId);
-            // Recuperar o documento de teste
-            const documento = yield collection.findOne({ _id: resultadoInsercao.insertedId });
-            console.log("Documento recuperado:", documento);
-            // Remover o documento de teste
-            yield collection.deleteOne({ _id: resultadoInsercao.insertedId });
-            console.log("Documento de teste removido.");
+            // Testar cadastro de livro
+            yield biblioteca.cadastrarLivro("O Senhor dos Anéis", "J.R.R. Tolkien", "1234567890");
+            yield biblioteca.cadastrarLivro("1984", "George Orwell", "0987654321");
+            // Testar listagem de livros
+            yield biblioteca.listarLivros();
+            // Testar listagem de livros emprestados (nenhum livro deve estar emprestado inicialmente)
+            biblioteca.listarLivrosEmprestados();
         }
         catch (error) {
-            console.error("Erro ao testar a conexão com o MongoDB:", error);
+            console.error("Erro ao testar operações de banco de dados:", error);
         }
         finally {
             yield bancoDeDados_1.client.close();
@@ -90,4 +86,4 @@ function testarConexao() {
         }
     });
 }
-testarConexao();
+testarOperacoes();
