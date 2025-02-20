@@ -4,15 +4,9 @@ const prompt = promptSync();
 
 class Biblioteca {
   private livros: Livro[] = [];
-  private db = client.db("biblioteca"); // Substitua pelo nome do seu banco de dados
+  private db = MongoDB
   private collection = this.db.collection("livros");
 
-  async cadastrarLivro(titulo: string, autor: string, isbn: string) {
-  }
-
-  async listarLivros() {
-   
-  }
 
   listarLivrosEmprestados() {
     const livrosEmprestados = this.livros.filter((livro) => livro.emprestado);
